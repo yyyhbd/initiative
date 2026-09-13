@@ -6,8 +6,8 @@
 "icon": "/icon.svg",
 "action": {
 "title": "SWADE Initiative",
-"icon": "/icon.svg",
-"popover": "/index.html",
+"icon": "icon.svg",
+"popover": "index.html",
 "width": 400,
 "height": 680
 }
