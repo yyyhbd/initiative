@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "manifest_version": 1,
   "author": "Savage Table",
-  "description": "Инициатива по картам действий для SWADE: джокеры, автоперетасовка, скрытые карты противников.",
+  "description": "Инициатива по картам действий для SWADE",
   "icon": "/icon.svg",
   "action": {
     "title": "SWADE Инициатива",
