@@ -1,0 +1,15 @@
+{
+  "name": "SWADE: Инициатива по картам",
+  "version": "1.0.0",
+  "manifest_version": 1,
+  "author": "Savage Table",
+  "description": "Трекер инициативы по картам действий для Savage Worlds Adventure Edition (с джокерами, автоперетасовкой и скрытыми картами противников).",
+  "icon": "/icon.svg",
+  "action": {
+    "title": "SWADE Инициатива",
+    "icon": "/icon.svg",
+    "popover": "/index.html",
+    "height": 680,
+    "width": 400
+  }
+}

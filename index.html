@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SWADE — Инициатива по картам</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --felt: #163229;
+    --felt-dark: #0f231c;
+    --parchment: #f1e6c8;
+    --parchment-dim: #d9cca4;
+    --brass: #c9a227;
+    --brass-bright: #e4c04f;
+    --red: #b0403a;
+    --black: #1c1a16;
+    --line: rgba(201, 162, 39, 0.28);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: radial-gradient(ellipse at top, var(--felt) 0%, var(--felt-dark) 100%);
+    color: var(--parchment);
+    font-family: "Inter", system-ui, sans-serif;
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #app { display: flex; flex-direction: column; min-height: 100vh; }
+
+  header {
+    padding: 16px 18px 12px;
+    border-bottom: 1px solid var(--line);
+    flex-shrink: 0;
+  }
+
+  header h1 {
+    font-family: "Spectral", Georgia, serif;
+    font-weight: 700;
+    font-size: 20px;
+    letter-spacing: 0.2px;
+    margin: 0 0 2px;
+    color: var(--parchment);
+  }
+
+  header .sub {
+    color: var(--parchment-dim);
+    font-size: 12.5px;
+  }
+
+  .round-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 12px;
+  }
+
+  .round-badge {
+    font-family: "Spectral", serif;
+    font-size: 13px;
+    color: var(--brass-bright);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 3px 12px;
+  }
+
+  .round-actions { display: flex; gap: 8px; }
+
+  button {
+    font-family: "Inter", sans-serif;
+    font-size: 12.5px;
+    font-weight: 600;
+    border-radius: 7px;
+    border: 1px solid var(--line);
+    background: rgba(201, 162, 39, 0.1);
+    color: var(--parchment);
+    padding: 7px 12px;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.05s ease;
+  }
+  button:hover { background: rgba(201, 162, 39, 0.22); }
+  button:active { transform: translateY(1px); }
+  button.primary {
+    background: var(--brass);
+    color: #241c05;
+    border-color: var(--brass);
+  }
+  button.primary:hover { background: var(--brass-bright); }
+  button.ghost {
+    background: transparent;
+    border-color: transparent;
+    color: var(--parchment-dim);
+    padding: 4px 6px;
+  }
+  button.ghost:hover { color: var(--parchment); background: rgba(255,255,255,0.06); }
+  button:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 14px 90px;
+  }
+
+  .empty {
+    text-align: center;
+    color: var(--parchment-dim);
+    padding: 40px 20px;
+    line-height: 1.6;
+  }
+  .empty b { color: var(--brass-bright); }
+
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(0,0,0,0.18);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    position: relative;
+  }
+  .row.active {
+    border-color: var(--brass-bright);
+    box-shadow: 0 0 0 1px var(--brass-bright), 0 0 14px rgba(228,192,79,0.25);
+  }
+  .row.enemy { background: rgba(176, 64, 58, 0.08); }
+  .row.waiting { opacity: 0.55; }
+
+  .card-face {
+    flex-shrink: 0;
+    width: 42px;
+    height: 58px;
+    border-radius: 6px;
+    background: var(--parchment);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: "Spectral", serif;
+    font-weight: 700;
+    line-height: 1;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.35);
+    border: 1px solid rgba(0,0,0,0.15);
+  }
+  .card-face .rank { font-size: 15px; }
+  .card-face .suit { font-size: 13px; margin-top: 2px; }
+  .card-face.red { color: var(--red); }
+  .card-face.black { color: var(--black); }
+  .card-face.joker {
+    background: linear-gradient(160deg, var(--brass-bright), var(--brass));
+    color: #241c05;
+  }
+  .card-face.joker .rank { font-size: 10px; letter-spacing: 0.5px; }
+  .card-face.hidden-back {
+    background: repeating-linear-gradient(45deg, #5a2323, #5a2323 4px, #4a1c1c 4px, #4a1c1c 8px);
+    color: transparent;
+  }
+  .card-face.none {
+    background: rgba(255,255,255,0.05);
+    color: var(--parchment-dim);
+    border-style: dashed;
+    font-family: "Inter", sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+  }
+
+  .info { flex: 1; min-width: 0; }
+  .name-row { display: flex; align-items: center; gap: 6px; }
+  .name {
+    font-weight: 600;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .tag {
+    font-size: 9.5px;
+    text-transform: none;
+    padding: 1px 6px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    color: var(--parchment-dim);
+    flex-shrink: 0;
+  }
+  .tag.joker-tag {
+    color: #241c05;
+    background: var(--brass-bright);
+    border-color: var(--brass-bright);
+    font-weight: 700;
+  }
+  .meta { font-size: 11px; color: var(--parchment-dim); margin-top: 1px; }
+
+  .row-actions { display: flex; gap: 2px; flex-shrink: 0; }
+
+  form.add-form {
+    display: flex;
+    gap: 6px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  form.add-form input[type="text"] {
+    flex: 1;
+    min-width: 110px;
+    background: rgba(0,0,0,0.25);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    color: var(--parchment);
+    padding: 7px 10px;
+    font-size: 13px;
+    font-family: inherit;
+  }
+  form.add-form input::placeholder { color: var(--parchment-dim); }
+  .side-toggle {
+    display: flex;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    overflow: hidden;
+  }
+  .side-toggle button {
+    border: none;
+    border-radius: 0;
+    background: transparent;
+  }
+  .side-toggle button.selected.heroes { background: rgba(201,162,39,0.35); }
+  .side-toggle button.selected.enemies { background: rgba(176,64,58,0.35); }
+
+  .hidden-toggle {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: var(--parchment-dim);
+    padding: 0 4px;
+  }
+
+  footer {
+    position: sticky;
+    bottom: 0;
+    background: linear-gradient(180deg, rgba(15,35,28,0) 0%, var(--felt-dark) 30%);
+    padding: 10px 14px 14px;
+  }
+
+  .role-note {
+    text-align: center;
+    color: var(--parchment-dim);
+    font-size: 11.5px;
+    padding: 10px;
+  }
+
+  .section-label {
+    font-family: "Spectral", serif;
+    font-size: 11.5px;
+    letter-spacing: 0.3px;
+    color: var(--brass-bright);
+    margin: 14px 0 6px 2px;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>Инициатива по картам</h1>
+    <div class="sub">Savage Worlds Adventure Edition</div>
+    <div class="round-row">
+      <span class="round-badge" id="roundBadge">Раунд —</span>
+      <div class="round-actions" id="roundActions"></div>
+    </div>
+  </header>
+  <main id="main"></main>
+  <footer id="footer"></footer>
+</div>
+
+<script type="module">
+import OBR from "https://esm.sh/@owlbear-rodeo/sdk@3";
+
+const META_KEY = "com.savagetable.swade-initiative/state";
+
+const SUITS = [
+  { symbol: "♠", color: "black", order: 4 },
+  { symbol: "♥", color: "red", order: 3 },
+  { symbol: "♦", color: "red", order: 2 },
+  { symbol: "♣", color: "black", order: 1 },
+];
+const RANKS = [
+  { label: "2", value: 2 }, { label: "3", value: 3 }, { label: "4", value: 4 },
+  { label: "5", value: 5 }, { label: "6", value: 6 }, { label: "7", value: 7 },
+  { label: "8", value: 8 }, { label: "9", value: 9 }, { label: "10", value: 10 },
+  { label: "В", value: 11 }, { label: "Д", value: 12 }, { label: "К", value: 13 },
+  { label: "Т", value: 14 },
+];
+
+function freshDeck() {
+  const deck = [];
+  let uid = 0;
+  for (const suit of SUITS) {
+    for (const rank of RANKS) {
+      deck.push({ id: `c${uid++}`, rank: rank.label, value: rank.value, suit: suit.symbol, suitOrder: suit.order, color: suit.color, isJoker: false });
+    }
+  }
+  deck.push({ id: `j${uid++}`, rank: "Джокер", value: 100, suit: "★", suitOrder: 0, color: "joker", isJoker: true });
+  deck.push({ id: `j${uid++}`, rank: "Джокер", value: 100, suit: "★", suitOrder: 0, color: "joker", isJoker: true });
+  return shuffle(deck);
+}
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function defaultState() {
+  return {
+    round: 0,
+    deck: freshDeck(),
+    discard: [],
+    participants: [],
+    activeId: null,
+    roundHasJoker: false,
+  };
+}
+
+let state = defaultState();
+let role = "PLAYER";
+let playerId = null;
+let ready = false;
+
+function drawOne(s) {
+  if (s.deck.length === 0) {
+    s.deck = shuffle(s.discard);
+    s.discard = [];
+  }
+  return s.deck.shift();
+}
+
+async function saveState(next) {
+  state = next;
+  await OBR.scene.setMetadata({ [META_KEY]: state });
+}
+
+function addParticipant(name, side, hidden) {
+  const next = structuredClone(state);
+  next.participants.push({
+    id: crypto.randomUUID(),
+    name: name.trim(),
+    side,
+    hidden,
+    ownerId: playerId,
+    card: null,
+  });
+  saveState(next);
+}
+
+function removeParticipant(id) {
+  const next = structuredClone(state);
+  next.participants = next.participants.filter((p) => p.id !== id);
+  saveState(next);
+}
+
+function toggleHidden(id) {
+  const next = structuredClone(state);
+  const p = next.participants.find((x) => x.id === id);
+  if (p) p.hidden = !p.hidden;
+  saveState(next);
+}
+
+function startRound() {
+  const next = structuredClone(state);
+  next.round += 1;
+  next.roundHasJoker = false;
+  next.activeId = null;
+  for (const p of next.participants) {
+    const card = drawOne(next);
+    p.card = card;
+    if (card.isJoker) next.roundHasJoker = true;
+  }
+  saveState(next);
+}
+
+function endRound() {
+  const next = structuredClone(state);
+  for (const p of next.participants) {
+    if (p.card) next.discard.push(p.card);
+    p.card = null;
+  }
+  if (next.roundHasJoker) {
+    next.deck = shuffle([...next.deck, ...next.discard]);
+    next.discard = [];
+  }
+  next.roundHasJoker = false;
+  next.activeId = null;
+  saveState(next);
+}
+
+function redraw(id) {
+  const next = structuredClone(state);
+  const p = next.participants.find((x) => x.id === id);
+  if (!p) return;
+  if (p.card) next.discard.push(p.card);
+  const card = drawOne(next);
+  p.card = card;
+  if (card.isJoker) next.roundHasJoker = true;
+  saveState(next);
+}
+
+function setActive(id) {
+  const next = structuredClone(state);
+  next.activeId = next.activeId === id ? null : id;
+  saveState(next);
+}
+
+function sortedParticipants() {
+  const withCard = state.participants.filter((p) => p.card);
+  const withoutCard = state.participants.filter((p) => !p.card);
+  withCard.sort((a, b) => {
+    if (b.card.value !== a.card.value) return b.card.value - a.card.value;
+    return b.card.suitOrder - a.card.suitOrder;
+  });
+  return [...withCard, ...withoutCard];
+}
+
+function canManage() { return role === "GM"; }
+function canRedraw(p) { return role === "GM" || p.ownerId === playerId || !p.hidden; }
+function shouldMaskCard(p) { return p.hidden && role !== "GM"; }
+
+function cardFaceHTML(p) {
+  if (!p.card) return `<div class="card-face none">ждёт</div>`;
+  if (shouldMaskCard(p)) return `<div class="card-face hidden-back"></div>`;
+  if (p.card.isJoker) {
+    return `<div class="card-face joker"><div class="rank">ДЖОКЕР</div><div class="suit">★</div></div>`;
+  }
+  return `<div class="card-face ${p.card.color}"><div class="rank">${p.card.rank}</div><div class="suit">${p.card.suit}</div></div>`;
+}
+
+function render() {
+  const roundBadge = document.getElementById("roundBadge");
+  roundBadge.textContent = state.round === 0 ? "Раунд не начат" : `Раунд ${state.round}`;
+
+  const roundActions = document.getElementById("roundActions");
+  roundActions.innerHTML = "";
+  if (canManage()) {
+    const startBtn = document.createElement("button");
+    startBtn.className = "primary";
+    startBtn.textContent = state.round === 0 ? "Начать бой" : "Новый раунд";
+    startBtn.onclick = startRound;
+    roundActions.appendChild(startBtn);
+
+    if (state.round > 0) {
+      const endBtn = document.createElement("button");
+      endBtn.textContent = "Завершить раунд";
+      endBtn.onclick = endRound;
+      roundActions.appendChild(endBtn);
+    }
+  }
+
+  const main = document.getElementById("main");
+  main.innerHTML = "";
+
+  if (state.participants.length === 0) {
+    main.innerHTML = `<div class="empty">Список пуст.<br/>${canManage() ? "Добавьте <b>дикие карты</b> и группы статистов ниже — они получат карты действий, когда вы начнёте раунд." : "Ведущий ещё не добавил участников боя."}</div>`;
+  } else {
+    const list = document.createElement("div");
+    for (const p of sortedParticipants()) {
+      const row = document.createElement("div");
+      row.className = "row" + (p.side === "enemies" ? " enemy" : "") + (state.activeId === p.id ? " active" : "") + (!p.card ? " waiting" : "");
+
+      const jokerBonus = p.card && p.card.isJoker && !shouldMaskCard(p);
+
+      row.innerHTML = `
+        ${cardFaceHTML(p)}
+        <div class="info">
+          <div class="name-row">
+            <span class="name">${escapeHTML(p.name)}</span>
+            ${jokerBonus ? '<span class="tag joker-tag">+2, ходит вне очереди</span>' : ""}
+            ${p.hidden ? '<span class="tag">скрыто</span>' : ""}
+          </div>
+          <div class="meta">${p.side === "enemies" ? "Противники" : "Герои"}</div>
+        </div>
+        <div class="row-actions"></div>
+      `;
+
+      const actions = row.querySelector(".row-actions");
+
+      if (p.card) {
+        const activeBtn = document.createElement("button");
+        activeBtn.className = "ghost";
+        activeBtn.title = "Отметить как ходящего";
+        activeBtn.textContent = state.activeId === p.id ? "●" : "○";
+        activeBtn.onclick = () => setActive(p.id);
+        actions.appendChild(activeBtn);
+
+        if (canRedraw(p)) {
+          const redrawBtn = document.createElement("button");
+          redrawBtn.className = "ghost";
+          redrawBtn.title = "Потратить фишку: новая карта";
+          redrawBtn.textContent = "↻";
+          redrawBtn.onclick = () => redraw(p.id);
+          actions.appendChild(redrawBtn);
+        }
+      }
+
+      if (canManage()) {
+        const hideBtn = document.createElement("button");
+        hideBtn.className = "ghost";
+        hideBtn.title = p.hidden ? "Показать игрокам" : "Скрыть от игроков";
+        hideBtn.textContent = p.hidden ? "👁‍🗨" : "👁";
+        hideBtn.onclick = () => toggleHidden(p.id);
+        actions.appendChild(hideBtn);
+
+        const delBtn = document.createElement("button");
+        delBtn.className = "ghost";
+        delBtn.title = "Удалить";
+        delBtn.textContent = "✕";
+        delBtn.onclick = () => removeParticipant(p.id);
+        actions.appendChild(delBtn);
+      }
+
+      list.appendChild(row);
+    }
+    main.appendChild(list);
+  }
+
+  if (canManage()) {
+    const label = document.createElement("div");
+    label.className = "section-label";
+    label.textContent = "Добавить участника";
+    main.appendChild(label);
+
+    const form = document.createElement("form");
+    form.className = "add-form";
+    form.innerHTML = `
+      <input type="text" name="name" placeholder="Имя (дикая карта или группа статистов)" required />
+      <div class="side-toggle">
+        <button type="button" data-side="heroes" class="selected heroes">Герои</button>
+        <button type="button" data-side="enemies">Враги</button>
+      </div>
+      <label class="hidden-toggle"><input type="checkbox" name="hidden" /> скрыть карту от игроков</label>
+      <button type="submit" class="primary">Добавить</button>
+    `;
+    let selectedSide = "heroes";
+    form.querySelectorAll(".side-toggle button").forEach((btn) => {
+      btn.onclick = () => {
+        selectedSide = btn.dataset.side;
+        form.querySelectorAll(".side-toggle button").forEach((b) => {
+          b.classList.toggle("selected", b === btn);
+        });
+      };
+    });
+    form.onsubmit = (e) => {
+      e.preventDefault();
+      const name = form.elements["name"].value;
+      const hidden = form.elements["hidden"].checked;
+      if (!name.trim()) return;
+      addParticipant(name, selectedSide, hidden);
+      form.reset();
+      selectedSide = "heroes";
+      form.querySelectorAll(".side-toggle button").forEach((b) => b.classList.toggle("selected", b.dataset.side === "heroes"));
+    };
+    main.appendChild(form);
+  }
+
+  const footer = document.getElementById("footer");
+  const deckCount = state.deck.length;
+  footer.innerHTML = canManage()
+    ? `<div class="role-note">В колоде осталось карт: ${deckCount}. ${state.roundHasJoker ? "В этом раунде вышел джокер — колода перетасуется по его завершении." : ""}</div>`
+    : `<div class="role-note">Только ведущий может начинать раунды и добавлять участников.</div>`;
+}
+
+function escapeHTML(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+async function init() {
+  if (!OBR.isAvailable) {
+    document.getElementById("main").innerHTML = `<div class="empty">Откройте это расширение внутри Owlbear Rodeo.</div>`;
+    return;
+  }
+
+  OBR.onReady(async () => {
+    playerId = OBR.player.id;
+    role = await OBR.player.getRole();
+
+    OBR.player.onChange((player) => {
+      role = player.role;
+      render();
+    });
+
+    const applyMetadata = (metadata) => {
+      const saved = metadata[META_KEY];
+      if (saved) {
+        state = saved;
+      } else if (canManage()) {
+        state = defaultState();
+        OBR.scene.setMetadata({ [META_KEY]: state });
+      }
+      render();
+    };
+
+    OBR.scene.onReadyChange(async (sceneReady) => {
+      ready = sceneReady;
+      if (ready) {
+        const metadata = await OBR.scene.getMetadata();
+        applyMetadata(metadata);
+        OBR.scene.onMetadataChange(applyMetadata);
+      } else {
+        document.getElementById("main").innerHTML = `<div class="empty">Откройте сцену, чтобы начать бой.</div>`;
+      }
+    });
+
+    if (await OBR.scene.isReady()) {
+      ready = true;
+      const metadata = await OBR.scene.getMetadata();
+      applyMetadata(metadata);
+      OBR.scene.onMetadataChange(applyMetadata);
+    }
+  });
+}
+
+init();
+</script>
+</body>
+</html>
