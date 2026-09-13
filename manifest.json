@@ -1,15 +1,14 @@
-{
-  "name": "SWADE: Инициатива по картам",
-  "version": "1.0.0",
-  "manifest_version": 1,
-  "author": "Savage Table",
-  "description": "Инициатива по картам действий для SWADE",
-  "icon": "/icon.svg",
-  "action": {
-    "title": "SWADE Инициатива",
-    "icon": "/icon.svg",
-    "popover": "/index.html",
-    "height": 680,
-    "width": 400
-  }
+{"name": "SWADE Card Initiative",
+"version": "1.0.0",
+"manifest_version": 1,
+"description": "Card-based initiative tracker for Savage Worlds Adventure Edition",
+"author": "Savage Table",
+"icon": "/icon.svg",
+"action": {
+"title": "SWADE Initiative",
+"icon": "/icon.svg",
+"popover": "/index.html",
+"width": 400,
+"height": 680
+}
 }
