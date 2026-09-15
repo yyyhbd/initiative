@@ -4,11 +4,11 @@
   "manifest_version": 1,
   "author": "Savage Table",
   "description": "Т",
-  "icon": "./icon.svg",
+  "icon": "/icon.svg",
   "action": {
     "title": "SWADE Инициатива",
-    "icon": "./icon.svg",
-    "popover": "./index.html",
+    "icon": "/icon.svg",
+    "popover": "/index.html",
     "height": 680,
     "width": 400
   }
